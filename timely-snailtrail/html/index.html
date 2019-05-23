@@ -1,0 +1,119 @@
+<style>
+  body, text {
+    font-weight: 300;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+    font-size: 14px;
+  }
+
+  #graph {
+    width: 100%;
+    height: 100%;
+  }
+  line.activity {
+    stroke: black;
+  }
+/*
+  .node rect {
+    stroke: #333;
+    fill: #fff;
+  }
+
+  .edgePath path {
+    stroke: #333;
+    fill: #333;
+    stroke-width: 1.5px;
+  }
+
+  .node text {
+    pointer-events: none;
+  }
+*/
+</style>
+<body></body>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<!--<script src="https://dagrejs.github.io/project/dagre-d3/latest/dagre-d3.js"></script>-->
+
+<script type="text/javascript">
+let data = [
+  {
+    w: 3,
+    t: [10000, 12000],
+  },
+  {
+    w: 3,
+    t: [12000, 13000],
+  },
+];
+
+let margins = {
+  left: 50,
+  top: 20,
+  right: 50,
+  bottom: 50,
+};
+
+let svg_parent = d3.select("body").append("svg").attr("id", "graph");
+
+console.log(svg_parent);
+
+let svg = svg_parent.append("g");
+
+let x = d3.scaleLinear().domain([0, 100000]);
+
+let xAxis = d3.axisBottom(x);
+    // yAxis = d3.axisLeft(y);
+
+let zoom = d3.zoom()
+  .scaleExtent([1, 32])
+  .on("zoom", zoomed);
+
+let svgXAxis = svg.append("g")
+  .attr("class", "axis axis--x");
+  // .call(xAxis);
+
+let activities = svg.append("g");
+
+let state = {
+  last_transform: d3.zoomIdentity,
+}
+
+function zoomed() {
+  state.last_transform = d3.event.transform; //, xt = t.rescaleX(x);
+  update();
+}
+
+activities.selectAll("line").data(data)
+  .enter()
+  .append('line')
+  .attr('class', 'activity');
+
+function update() {
+    let width = (window.innerWidth);
+    let height = (window.innerHeight);
+
+    x.range([margins.left, width - margins.right]);
+  
+    // zoom
+      // .translateExtent([[0, 0], [width - margins.left - margins.right, 0]]);
+      // .extent([[margins.left, margins.top], [width - margins.right, height - margins.bottom]])
+
+    svg_parent.call(zoom);
+
+    let xt = state.last_transform.rescaleX(x);
+
+    svgXAxis
+      .attr("transform", "translate(0," + (height - margins.bottom) + ")")
+      .call(xAxis.scale(xt));
+
+    activities.selectAll("line").data(data)
+      .attr('x1', (d) => xt(d.t[0]))
+      .attr('y1', 100)
+      .attr('x2', (d) => xt(d.t[1]))
+      .attr('y2', 100);
+}
+
+update();
+d3.select(window).on('resize', update);
+
+</script>
+
